@@ -56,13 +56,13 @@ function checkNodeVersion(wanted, id) {
 }
 
 // 检查配置是否符合特定schema
-function checkConfigScheme(configKey, configObj, privateKey) {
+function checkConfigScheme(configKey, configObj, sshAgent, privateKey) {
   let deploySchemaKeys = null;
   const configKeys = Object.keys(configObj);
   const neededKeys = [];
   const unConfigedKeys = [];
   let configValid = true;
-  if (privateKey) {
+  if (sshAgent || privateKey) {
     deploySchemaKeys = Object.keys(PRIVATE_KEY_DEPLOY_SCHEMA);
   } else {
     deploySchemaKeys = Object.keys(DEPLOY_SCHEMA);
@@ -90,15 +90,16 @@ function checkConfigScheme(configKey, configObj, privateKey) {
 function checkDeployConfig(deployConfigPath) {
   if (fs.existsSync(deployConfigPath)) {
     const config = require(deployConfigPath);
-    const { privateKey, passphrase, projectName } = config;
+    const { sshAgent, privateKey, passphrase, projectName } = config;
     const keys = Object.keys(config);
     const configs = [];
     for (let key of keys) {
       if (config[key] instanceof Object) {
-        if (!checkConfigScheme(key, config[key], privateKey)) {
+        if (!checkConfigScheme(key, config[key], sshAgent, privateKey)) {
           return false;
         }
         config[key].command = key;
+        config[key].sshAgent = sshAgent;
         config[key].privateKey = privateKey;
         config[key].passphrase = passphrase;
         config[key].projectName = projectName;
